@@ -1,0 +1,6 @@
+"array[xyz ] += pi 3.14159e-10"
+"numbers 972 0x972 A8 0XA8 XA8 0972 072"
+"3.1 03.1 x3.1 0x3.1 30x1.x"
+"+,++,+++,++++,+++++,++=,+++=="
+"today is a beautiful day"
+"0x4356abdc 0777 [] "
