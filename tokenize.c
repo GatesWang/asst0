@@ -70,29 +70,27 @@ void set_type(char *input, type *previous, type *current, int *i){
 	int j = *i;
 	char c = input[j];
 
+	int not_word = *previous!=WORD;
+	int not_decimal = *previous!=DECIMAL;
+	int not_hex = *previous!=HEX;
+	int not_octal = *previous!=OCTAL;
+
 	if(starts_with("0x", &input[j]) || starts_with("0X", &input[j])){
 		*current = HEX;
-		*previous = NONE; 
+		*previous = NONE;
 		(*i)++; //skip the X or x
 	}
-	else if(*previous!=WORD &&
-			*previous!=HEX &&
-			*previous!=DECIMAL &&
-			starts_with("0", &input[j])){
+	else if(not_word && not_hex && not_decimal && starts_with("0", &input[j])){
 		*current = OCTAL;
 		*previous = NONE;
 	}
 	else if(isalpha(c)){
-		if(*previous==HEX && isxdigit(c)){
-		}
-		else{
+		if(not_hex || !isxdigit(c)){
 			*current = WORD;
 		}
 	}
 	else if(isdigit(c)){
-		if( (*previous==HEX && isxdigit(c)) || *previous==WORD || *previous==OCTAL){
-		}
-		else{
+		if(not_hex && not_word && not_octal){
 			*current = DECIMAL;
 		}
 	}
