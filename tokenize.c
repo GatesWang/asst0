@@ -3,13 +3,17 @@
 #include <stdlib.h>
 #include <ctype.h>
 
-typedef enum _type {NONE, SPACE, WORD, DECIMAL, OCTAL, HEX, FLOAT} type;
 
 int run_tests(FILE *f);
+
 int tokenize(char *string);
-int starts_with(char *prefix, char *string);
+typedef enum _type {NONE, SPACE, WORD, DECIMAL, OCTAL, HEX, FLOAT} type;
 void set_type(char *input, type *previous, type *current, int *i);
 void print_type(type type);
+
+int is_octal(char *string, int i);
+int is_hex(char *string, int i);
+int starts_with(char *prefix, char *string);
 
 int main(int argc, char *argv[]){
 	if (argc < 2){
@@ -70,27 +74,63 @@ void set_type(char *input, type *previous, type *current, int *i){
 	int j = *i;
 	char c = input[j];
 
+	//these are all about the previous token
 	int not_word = *previous!=WORD;
 	int not_decimal = *previous!=DECIMAL;
 	int not_hex = *previous!=HEX;
 	int not_octal = *previous!=OCTAL;
 
-	if(starts_with("0x", &input[j]) || starts_with("0X", &input[j])){
+	/*
+		"0XG" : in this case there is no valid hex digit
+		----------
+		decimal 0
+		word XG
+
+		"A0XRR" : in this case there is also no valid hex digit, but the 0 is part of a word
+		----------
+		word A0XRR
+
+		"0720XTT" : in this case there is no valid hex digit, but the 0 is an octal
+		----------
+		octal 0720
+		word XTT
+	*/
+	int valid_hex_start = starts_with("0x", &input[j]) || starts_with("0X", &input[j]);
+	int is_valid_hex = valid_hex_start && is_hex(input, j+2);
+	/*
+		"07020" :
+		----------
+		octal 07020
+
+		"079021" : in this case the octal stops because the digit is not a valid octal digit
+		----------
+		octal 07
+		decimal 9021
+	*/
+	int is_valid_octal = starts_with("0", &input[j]) && is_octal(input, j+1); 
+
+	if(is_valid_hex){
 		*current = HEX;
 		*previous = NONE;
-		(*i)++; //skip the X or x
+		(*i)++; //skip the x or X
 	}
-	else if(not_word && not_hex && not_decimal && starts_with("0", &input[j])){
+	else if(not_word && not_hex && not_decimal && not_octal && is_valid_octal){
 		*current = OCTAL;
 		*previous = NONE;
 	}
 	else if(isalpha(c)){
-		if(not_hex || !isxdigit(c)){
+		if(not_hex){// if we are not continuing for a different type
+			*current = WORD;
+		}
+		if(!is_hex(input, j)){
 			*current = WORD;
 		}
 	}
 	else if(isdigit(c)){
-		if(not_hex && not_word && not_octal){
+		if(not_hex && not_word && not_octal){// if we are not continuing for a different type
+			*current = DECIMAL;
+		}
+		if(!is_octal(input, j)){
 			*current = DECIMAL;
 		}
 	}
@@ -126,6 +166,24 @@ void print_type(type type){
 */
 int starts_with(char * prefix, char * string){
     return strncmp(prefix, string, strlen(prefix)) == 0;
+}
+
+/*
+	given an integer return if it is a valid octal digit
+*/
+int is_octal(char *string, int i){
+	if(i<strlen(string)){
+		int d = (string[i] - '0');
+		return (d>=0 && d<=7);
+	}
+	return 0;
+}
+
+/*
+	given an index return if it is a valid hex digit
+*/
+int is_hex(char *string, int i){
+	return i<strlen(string) && isxdigit(string[i]);
 }
 
 /*
