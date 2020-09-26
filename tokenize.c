@@ -58,9 +58,8 @@ int run_tests(FILE * f){
 */
 int tokenize(char * input){
 	int length = strlen(input);
-
 	typedef enum _type {NONE, SPACE, WORD, DECIMAL, OCTAL, HEX, FLOAT} type;
-	
+
 	type previous = NONE;
 	type current = NONE;
 	for (int i = 0; i < length ; i++){
@@ -69,30 +68,37 @@ int tokenize(char * input){
 			current = SPACE;
 		}
 		else{
-			if(starts_with("0x", &input[i])){
+			if(starts_with("0x", &input[i]) || starts_with("0X", &input[i])){
 				current = HEX;
+				previous = NONE;
+				i++; //skip the X or x
+			}
+			else if(previous!=WORD &&
+					previous!=HEX &&
+					previous!=DECIMAL &&
+					starts_with("0", &input[i])){
+				current = OCTAL;
+				previous = NONE;
 			}
 			else if(isalpha(c)){
-				if(previous==HEX){
+				if(previous==HEX && isxdigit(c)){
 				}
 				else{
 					current = WORD;
 				}
 			}
 			else if(isdigit(c)){
-				if(previous==HEX){
+				if( (previous==HEX && isxdigit(c)) || previous==WORD || previous==OCTAL){
 				}
 				else{
 					current = DECIMAL;
 				}
 			}
-		/*
-			if(current==WORD) printf("word\n");
-			if(current==DECIMAL) printf("decimal\n");
-			if(current==HEX) printf("hex\n");
-		*/
 			if(previous!=current){
-				printf("new token\n");
+				if(current==WORD) printf("word\n");
+				if(current==DECIMAL) printf("decimal\n");
+				if(current==HEX) printf("hex\n");
+				if(current==OCTAL) printf("octal\n");
 			}
 		}
 		previous = current;
