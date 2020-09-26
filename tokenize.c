@@ -1,7 +1,9 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <ctype.h>
 
+int starts_with(char * prefix, char * string);
 int tokenize(char * string);
 int run_tests(FILE * f);
 
@@ -20,9 +22,9 @@ int main(int argc, char * argv[]){
 	char* input = malloc(length+1 * sizeof(char));
 	strcpy(input,argv[1]);
 	return tokenize(input);
-	*/	
+	*/
 
-	FILE *fptr = fopen(argv[1], "r");	
+	FILE *fptr = fopen(argv[1], "r");
 	run_tests(fptr);
 	fclose(fptr);
 	return 0;
@@ -57,13 +59,52 @@ int run_tests(FILE * f){
 int tokenize(char * input){
 	int length = strlen(input);
 
-	typedef enum _type {NONE, WORD, DECIMAL, OCTAL, HEX, FLOAT} type;
+	typedef enum _type {NONE, SPACE, WORD, DECIMAL, OCTAL, HEX, FLOAT} type;
 	
+	type previous = NONE;
 	type current = NONE;
-
 	for (int i = 0; i < length ; i++){
-  		printf("%c", input[i]);
-  		//check type then go to appropriate classifier method
+  		char c = input[i];
+		if(isspace(c)){
+			current = SPACE;
+		}
+		else{
+			if(starts_with("0x", &input[i])){
+				current = HEX;
+			}
+			else if(isalpha(c)){
+				if(previous==HEX){
+				}
+				else{
+					current = WORD;
+				}
+			}
+			else if(isdigit(c)){
+				if(previous==HEX){
+				}
+				else{
+					current = DECIMAL;
+				}
+			}
+		/*
+			if(current==WORD) printf("word\n");
+			if(current==DECIMAL) printf("decimal\n");
+			if(current==HEX) printf("hex\n");
+		*/
+			if(previous!=current){
+				printf("new token\n");
+			}
+		}
+		previous = current;
 	}
 	return 0;
 }
+
+
+int starts_with(char * prefix, char * string)
+{
+    return strncmp(prefix, string, strlen(prefix)) == 0;
+}
+
+
+
