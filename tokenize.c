@@ -5,11 +5,11 @@
 
 
 int run_tests(FILE *f);
-
 int tokenize(char *string);
+
 typedef enum _type {NONE, SPACE, WORD, DECIMAL, OCTAL, HEX, FLOAT} type;
 void set_type(char *input, type *previous, type *current, int *i);
-void print_type(type type);
+char* get_type(type type);
 
 int is_octal(char *string, int i);
 int is_hex(char *string, int i);
@@ -45,6 +45,8 @@ int main(int argc, char *argv[]){
 */
 int tokenize(char *input){
 	int length = strlen(input);
+	char * token_type = malloc(1000 * sizeof(char));
+	char * token = malloc(1000 * sizeof(char));
 
 	type previous = NONE;
 	type current = NONE;
@@ -55,14 +57,22 @@ int tokenize(char *input){
 		else{
 			set_type(input, &previous, &current, &i);
 			if(previous!=current){
-				print_type(current);
-				if(current==HEX)
-					printf("0");
+				if(strlen(token_type) > 0){//if set print previous token_type + token
+					printf("%s %s\n", token_type, token);
+				}
+
+				token_type = malloc(1000 * sizeof(char));
+				token = malloc(1000 * sizeof(char));
+				strcpy(token_type, get_type(current)); //set token_type
+				if(current==HEX){ //set token
+					strcat(token,"0");
+				}
 			}
-			printf("%c", input[i]);
+			sprintf(token, "%s%c", token, input[i]);//append to token
 		}
 		previous = current;
 	}
+	printf("%s %s\n", token_type, token);
 	return 0;
 }
 
@@ -75,63 +85,46 @@ void set_type(char *input, type *previous, type *current, int *i){
 	char c = input[j];
 
 	//these are all about the previous token
-	int not_word = *previous!=WORD;
-	int not_decimal = *previous!=DECIMAL;
-	int not_hex = *previous!=HEX;
-	int not_octal = *previous!=OCTAL;
+	int word = *previous==WORD;
+	int decimal = *previous==DECIMAL;
+	int hex = *previous==HEX;
+	int octal = *previous==OCTAL;
 
-	/*
-		"0XG" : in this case there is no valid hex digit
-		----------
-		decimal 0
-		word XG
-
-		"A0XRR" : in this case there is also no valid hex digit, but the 0 is part of a word
-		----------
-		word A0XRR
-
-		"0720XTT" : in this case there is no valid hex digit, but the 0 is an octal
-		----------
-		octal 0720
-		word XTT
-	*/
 	int valid_hex_start = starts_with("0x", &input[j]) || starts_with("0X", &input[j]);
-	int is_valid_hex = valid_hex_start && is_hex(input, j+2);
-	/*
-		"07020" :
-		----------
-		octal 07020
-
-		"079021" : in this case the octal stops because the digit is not a valid octal digit
-		----------
-		octal 07
-		decimal 9021
-	*/
+	int is_valid_hex = valid_hex_start && is_hex(input, j+2); 
 	int is_valid_octal = starts_with("0", &input[j]) && is_octal(input, j+1); 
 
 	if(is_valid_hex){
 		*current = HEX;
 		*previous = NONE;
-		(*i)++; //skip the x or X
+		(*i)++; //skip the '0' and go to 'x' or 'X'
 	}
-	else if(not_word && not_hex && not_decimal && not_octal && is_valid_octal){
+	else if(!word && !hex && !decimal && !octal && is_valid_octal){
 		*current = OCTAL;
 		*previous = NONE;
 	}
 	else if(isalpha(c)){
-		if(not_hex){// if we are not continuing for a different type
+		if(!hex){// if we are not continuing for hex
 			*current = WORD;
 		}
-		if(!is_hex(input, j)){
+		else if(!is_hex(input, j)){// we are continuing for hex, but it ends now
 			*current = WORD;
 		}
 	}
 	else if(isdigit(c)){
-		if(not_hex && not_word && not_octal){// if we are not continuing for a different type
+		if(!hex && !word && !octal){// if we are not continuing for a different type
 			*current = DECIMAL;
 		}
-		if(!is_octal(input, j)){
+		else if(octal && !is_octal(input, j)){//we are continuing for octal, but it ends now
 			*current = DECIMAL;
+		}
+	}
+	else if(c == '.'){
+		if(*previous == DECIMAL){
+			*current = FLOAT;
+		}
+		else{
+
 		}
 	}
 }
@@ -139,26 +132,28 @@ void set_type(char *input, type *previous, type *current, int *i){
 /*
 	given a type print the corresponding string
 */
-void print_type(type type){
-	printf("\n");
+char* get_type(type type){
+	char * answer = malloc(1000 * sizeof(char));
+
 	switch(type){
 		case WORD :
-			printf("word");
+			strcat(answer, "word");
 			break;
 		case DECIMAL :
-			printf("decimal");
+			strcat(answer, "decimal");
 			break;
 		case OCTAL :
-			printf("octal");
+			strcat(answer, "octal");
 			break;
 		case HEX :
-			printf("hex");
+			strcat(answer, "hex");
 			break;
 		case FLOAT :
-			printf("float");
+			strcat(answer, "float");
 			break;
 	}
-	printf(" ");
+
+	return answer;	
 }
 
 /*
