@@ -12,8 +12,8 @@ char * token;
 
 typedef enum _type {
 	NONE,
-	SPACE,
 	STRUCT_MEM,
+	SPACE,
 	WORD,
 	DECIMAL,
 	OCTAL,
@@ -122,7 +122,6 @@ void print_token(){
 
 	//set token_type for current
 	set_token_type(current);
-	token[0] = '\0';
 	if(current==HEX){
 		strcat(token,"0");
 	}
@@ -131,22 +130,22 @@ void print_token(){
 void set_token_type(type type){
 	switch(type){
 		case WORD :
-			sprintf(token_type, "word");
+			strcat(answer, "word");
 			break;
 		case DECIMAL :
-			sprintf(token_type, "decimal");
+			strcat(answer, "decimal");
 			break;
 		case OCTAL :
-			sprintf(token_type, "octal");
+			strcat(answer, "octal");
 			break;
 		case HEX :
-			sprintf(token_type, "hex");
+			strcat(answer, "hex");
 			break;
 		case FLOAT :
-			sprintf(token_type, "float");
+			strcat(answer, "float");
 			break;
 		case STRUCT_MEM:
-			sprintf(token_type, "struct member");
+			strcat(answer, "struct mem");
 			break;
 	}
 }
