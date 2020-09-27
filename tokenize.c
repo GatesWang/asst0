@@ -90,9 +90,13 @@ void set_previous_and_current(char *input, int *i){
 		previous = NONE;
 	}
 	else if(isalpha(c)){
-		if(!hex)
+		int valid_exponent1 = starts_with("e", &input[j]) && is_digit(input, j+1);
+		int valid_exponent2 = starts_with("e-", &input[j]) && is_digit(input, j+2);
+		int start_of_exponent = floating && (valid_exponent1 || valid_exponent2);
+
+		if(!hex && !start_of_exponent)
 			current = WORD;
-		else if(!is_hex(input, j))
+		else if(hex && !is_hex(input, j))
 			current = WORD;
 	}
 	else if(isdigit(c)){
