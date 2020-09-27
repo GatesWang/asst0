@@ -7,13 +7,29 @@
 int run_tests(FILE *f);
 int tokenize(char *string);
 
-typedef enum _type {NONE, SPACE, WORD, DECIMAL, OCTAL, HEX, FLOAT} type;
-void set_type(char *input, type *previous, type *current, int *i);
+typedef enum _type {
+NONE,
+STRUCT_MEM,
+SPACE,
+WORD,
+DECIMAL,
+OCTAL,
+HEX,
+FLOAT} type;
+
+type current = NONE;
+type previous = NONE;
+void set_type(char *input, int *i);
 char* get_type(type type);
 
 int is_octal(char *string, int i);
 int is_hex(char *string, int i);
+int is_digit(char *string, int i);
 int starts_with(char *prefix, char *string);
+
+int convert_token_type(char * token_type);
+int is_float = 0;
+
 
 int main(int argc, char *argv[]){
 	if (argc < 2){
@@ -38,33 +54,32 @@ int main(int argc, char *argv[]){
 	return 0;
 }
 
-
-/*
-	returns 0 if tokenizes string succesfully.
-	returns -1 otherwise.
-*/
 int tokenize(char *input){
+	is_float = 0;
+	current = NONE;
+	previous = NONE;
+
 	int length = strlen(input);
 	char * token_type = malloc(1000 * sizeof(char));
 	char * token = malloc(1000 * sizeof(char));
 
-	type previous = NONE;
-	type current = NONE;
 	for (int i = 0; i<length ; i++){
 		if(isspace(input[i])){
 			current = SPACE;
 		}
 		else{
-			set_type(input, &previous, &current, &i);
+			set_type(input, &i);
 			if(previous!=current){
-				if(strlen(token_type) > 0){//if set print previous token_type + token
+				if(strlen(token_type) > 0){//print
+					convert_token_type(token_type);
 					printf("%s %s\n", token_type, token);
 				}
 
+				//set token_type and token
 				token_type = malloc(1000 * sizeof(char));
 				token = malloc(1000 * sizeof(char));
-				strcpy(token_type, get_type(current)); //set token_type
-				if(current==HEX){ //set token
+				strcpy(token_type, get_type(current));
+				if(current==HEX){
 					strcat(token,"0");
 				}
 			}
@@ -72,6 +87,7 @@ int tokenize(char *input){
 		}
 		previous = current;
 	}
+	convert_token_type(token_type);
 	printf("%s %s\n", token_type, token);
 	return 0;
 }
@@ -80,51 +96,52 @@ int tokenize(char *input){
 	input: the input string, an index, and the previous type
 	output: the type of the current index
 */
-void set_type(char *input, type *previous, type *current, int *i){
+void set_type(char *input, int *i){
 	int j = *i;
 	char c = input[j];
 
 	//these are all about the previous token
-	int word = *previous==WORD;
-	int decimal = *previous==DECIMAL;
-	int hex = *previous==HEX;
-	int octal = *previous==OCTAL;
+	int word = previous==WORD;
+	int decimal = previous==DECIMAL;
+	int hex = previous==HEX;
+	int octal = previous==OCTAL;
 
 	int valid_hex_start = starts_with("0x", &input[j]) || starts_with("0X", &input[j]);
 	int is_valid_hex = valid_hex_start && is_hex(input, j+2); 
 	int is_valid_octal = starts_with("0", &input[j]) && is_octal(input, j+1); 
 
 	if(is_valid_hex){
-		*current = HEX;
-		*previous = NONE;
+		current = HEX;
+		previous = NONE;
 		(*i)++; //skip the '0' and go to 'x' or 'X'
 	}
 	else if(!word && !hex && !decimal && !octal && is_valid_octal){
-		*current = OCTAL;
-		*previous = NONE;
+		current = OCTAL;
+		previous = NONE;
 	}
 	else if(isalpha(c)){
 		if(!hex){// if we are not continuing for hex
-			*current = WORD;
+			current = WORD;
 		}
 		else if(!is_hex(input, j)){// we are continuing for hex, but it ends now
-			*current = WORD;
+			current = WORD;
 		}
 	}
 	else if(isdigit(c)){
 		if(!hex && !word && !octal){// if we are not continuing for a different type
-			*current = DECIMAL;
+			current = DECIMAL;
 		}
 		else if(octal && !is_octal(input, j)){//we are continuing for octal, but it ends now
-			*current = DECIMAL;
+			current = DECIMAL;
 		}
 	}
 	else if(c == '.'){
-		if(*previous == DECIMAL){
-			*current = FLOAT;
+		if(current == DECIMAL && is_digit(input, j+1)){
+			is_float = 1;
 		}
 		else{
-
+			is_float = 0;
+			current = STRUCT_MEM; 
 		}
 	}
 }
@@ -148,12 +165,19 @@ char* get_type(type type){
 		case HEX :
 			strcat(answer, "hex");
 			break;
-		case FLOAT :
-			strcat(answer, "float");
+		case STRUCT_MEM:
+			strcat(answer, "struct mem");
 			break;
 	}
 
-	return answer;	
+	return answer;
+}
+
+int convert_token_type(char * token_type){
+	if(previous == DECIMAL && is_float){
+		strcpy(token_type, "float");
+		is_float = 0;
+	}
 }
 
 /*
@@ -179,6 +203,11 @@ int is_octal(char *string, int i){
 */
 int is_hex(char *string, int i){
 	return i<strlen(string) && isxdigit(string[i]);
+}
+
+
+int is_digit(char *string, int i){
+	return i<strlen(string) && isdigit(string[i]);
 }
 
 /*
