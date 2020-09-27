@@ -47,7 +47,8 @@ int tokenize(char *input){
 	for (int i = 0; i<strlen(input); i++){
 		process_index(input, &i);
 	}
-	print_token(token_type, token);
+	set_token_type(current);
+	printf("%s %s\n", token_type, token);
 	return 0;
 }
 
@@ -123,7 +124,7 @@ void set_previous_and_current(char *input, int *i){
 }
 
 void print_token(){
-	//printf("prev %d current %d\n",previous,current);
+//	printf("prev %d current %d\n",previous,current);
 	//print previous
 	set_token_type(previous);
 	if(strlen(token) > 0){
@@ -211,8 +212,10 @@ int run_tests(FILE *f){
 		}
 		input[n] = '\0';
 		if(n > 0){
+			printf("............................\n");
+			printf("%s\n", input);
+			printf("............................\n");
 			tokenize(input);
-			printf("\n............................\n");
 		}
 	}
 }
