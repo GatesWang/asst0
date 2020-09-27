@@ -11,14 +11,14 @@ char * token_type;
 char * token;
 
 typedef enum _type {
-	NONE,
-	SPACE,
-	STRUCT_MEM,
-	WORD,
-	DECIMAL,
-	OCTAL,
-	HEX,
-	FLOAT
+	NONE = 0,
+	SPACE = 1,
+	STRUCT_MEM = 2,
+	WORD = 3,
+	DECIMAL = 4,
+	OCTAL = 5,
+	HEX = 6,
+	FLOAT = 7
 } type;
 
 type current = NONE;
@@ -45,12 +45,7 @@ int tokenize(char *input){
 	token = malloc(1000 * sizeof(char));
 
 	for (int i = 0; i<strlen(input); i++){
-		if(isspace(input[i]))
-			current = SPACE;
-		else
-			process_index(input, &i);
-
-		previous = current;
+		process_index(input, &i);
 	}
 	print_token(token_type, token);
 	return 0;
@@ -63,7 +58,10 @@ void process_index(char * input, int *i){
 	}
 
 	//print to token one character at a time
-	sprintf(token, "%s%c", token, input[(*i)]);
+	char c = input[*i];
+	if(!isspace(c)){
+		sprintf(token, "%s%c", token, c);
+	}
 }
 
 void set_previous_and_current(char *input, int *i){
@@ -71,43 +69,50 @@ void set_previous_and_current(char *input, int *i){
 	char c = input[j];
 
 	//these are all about the previous token
+	previous = current;
 	int word = previous==WORD;
 	int decimal = previous==DECIMAL;
 	int hex = previous==HEX;
 	int octal = previous==OCTAL;
 	int floating = previous==FLOAT;
 
-	int is_valid_hex = starts_with("0x", &input[j]) || starts_with("0X", &input[j]);
-	int is_valid_octal = starts_with("0", &input[j]);
-
-	if(is_valid_hex){
-		current = HEX;
-		previous = NONE;
-		(*i)++; //skip the '0' and go to 'x' or 'X'
-	}
-	else if(!word && !hex && !decimal && !octal && !floating && is_valid_octal){
-		current = OCTAL;
-		previous = NONE;
+	if(isspace(c)){
+		current = SPACE;
 	}
 	else if(isalpha(c)){
 		int valid_exponent1 = starts_with("e", &input[j]) && is_digit(input, j+1);
 		int valid_exponent2 = starts_with("e-", &input[j]) && is_digit(input, j+2);
 		int start_of_exponent = floating && (valid_exponent1 || valid_exponent2);
 
-		if(!hex && !start_of_exponent)
+		if(!hex && !start_of_exponent){
 			current = WORD;
-		else if(hex && !is_hex(input, j))
+		}
+		else if(hex && !is_hex(input, j)){
 			current = WORD;
+		}
 	}
 	else if(isdigit(c)){
-//		printf("h %d, w %d, o %d, f %d \n",hex,word,octal,floating);
-		if(!hex && !word && !octal && !floating)
+		int is_valid_hex = starts_with("0x", &input[j]) || starts_with("0X", &input[j]);
+		int is_valid_octal = starts_with("0", &input[j]);
+
+		if(!word && !decimal && !octal && !floating && is_valid_hex){
+			current = HEX;
+			previous = hex ? NONE : previous;
+			(*i)++; //skip the '0' and go to 'x' or 'X'
+		}
+		else if(!word && !hex && !decimal && !octal && !floating && is_valid_octal){
+			current = OCTAL;
+			previous = octal ? NONE : previous;
+		}
+		else if(!hex && !word && !octal && !floating){
 			current = DECIMAL;
-		else if(octal && !is_octal(input, j))
+		}
+		else if(octal && !is_octal(input, j)){
 			current = DECIMAL;
+		}
 	}
 	else if(c == '.'){
-		if(previous == DECIMAL && is_digit(input, j+1)){
+		if( (decimal || octal) && is_digit(input, j+1)){
 			previous = FLOAT;
 			current = FLOAT;
 		}
@@ -118,9 +123,10 @@ void set_previous_and_current(char *input, int *i){
 }
 
 void print_token(){
+	//printf("prev %d current %d\n",previous,current);
 	//print previous
 	set_token_type(previous);
-	if(strlen(token_type) > 0){
+	if(strlen(token) > 0){
 		printf("%s %s\n", token_type, token);
 	}
 
