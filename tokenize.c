@@ -18,7 +18,15 @@ typedef enum _type {
 	DECIMAL = 4,
 	OCTAL = 5,
 	HEX = 6,
-	FLOAT = 7
+	FLOAT = 7,
+	LEFTPARENTHESIS = 8,
+	RIGHTPARENTHESIS = 9,
+	LEFTBRACKET = 10,
+	RIGHTBRACKET = 11,
+	SUBTRACTION = 12,
+	DECREMENT = 13,
+	ADDITION = 14,
+	INCREMENT = 15
 } type;
 
 type current = NONE;
@@ -52,6 +60,7 @@ int tokenize(char *input){
 	return 0;
 }
 
+//print if previous and current toke aren't the same
 void process_index(char * input, int *i){
 	set_previous_and_current(input, i);
 	if(previous!=current){
@@ -64,7 +73,7 @@ void process_index(char * input, int *i){
 		sprintf(token, "%s%c", token, c);
 	}
 }
-
+// i is the current index from the input, input is array holding input string
 void set_previous_and_current(char *input, int *i){
 	int j = *i;
 	char c = input[j];
@@ -80,6 +89,7 @@ void set_previous_and_current(char *input, int *i){
 	if(isspace(c)){
 		current = SPACE;
 	}
+
 	else if(isalpha(c)){
 		int valid_exponent1 = starts_with("e", &input[j]) && is_digit(input, j+1);
 		int valid_exponent2 = starts_with("e-", &input[j]) && is_digit(input, j+2);
@@ -159,10 +169,27 @@ void set_token_type(type type){
 		case STRUCT_MEM:
 			sprintf(token_type, "struct member");
 			break;
+		case LEFTPARENTHESIS:
+				sprintf(token_type, "left parenthesis");
+				break;
+		case RIGHTPARENTHESIS:
+				sprintf(token_type, "right parenthesis");
+				break;
+		case LEFTBRACKET:
+				sprintf(token_type, "left bracket");
+				break;
+		case RIGHTBRACKET:
+				sprintf(token_type, "right bracket");
+				break;
 	}
 }
+[
+]
+
+
 
 /*
+	compares prefix string with location at index pointer
 	returns true if string begins with prefix
 */
 int starts_with(char * prefix, char * string){
@@ -170,6 +197,7 @@ int starts_with(char * prefix, char * string){
 }
 
 /*
+	parameter : (input array, current index)
 	given an integer return if it is a valid octal digit
 */
 int is_octal(char *string, int i){
@@ -181,6 +209,7 @@ int is_octal(char *string, int i){
 }
 
 /*
+	parameter : (input array, current index)
 	given an index return if it is a valid hex digit
 */
 int is_hex(char *string, int i){
@@ -188,11 +217,53 @@ int is_hex(char *string, int i){
 }
 
 /*
-	given an index return if the char at that position is a 
+	given an index return if the char at that position is a
 	valid decimal digit
 */
 int is_digit(char *string, int i){
 	return i<strlen(string) && isdigit(string[i]);
+}
+
+//returns 1 if char c is a white space character
+int isSpace(char c){
+	switch(c){}
+		case ' ':
+		case '\t':
+		case '\v':
+		case '\f':
+		case '\n':
+		case '\r':
+			return 1;
+			break;
+		default:
+			return 0;
+}
+
+// sets current token if current index is a operator
+int isOperator(char c ,type *current, type *previous){
+	case '(':
+		current = LEFTPARENTHESIS;
+		break;
+
+	case ')':
+		current = RIGHTPARENTHESIS;
+		break;
+	case '[':
+		current = LEFTBRACKET;
+		break;
+	case ']':
+		current = RIGHTBRACKET;
+		break;
+	case '-':
+		current = SUBTRACTION;
+		break;
+	case '+':
+		if (*previous == '+'){
+			current = INCREMENT;
+			break;
+		}
+			current = ADDITION;
+			break;
 }
 
 /*
@@ -219,4 +290,3 @@ int run_tests(FILE *f){
 		}
 	}
 }
-
