@@ -72,8 +72,8 @@ void set_token_type();
 int is_octal(char *string, int i);
 int is_hex(char *string, int i);
 int is_digit(char *string, int i);
+void process_operator(char c);
 int starts_with(char *prefix, char *string);
-void isOperator(char c);
 
 int main(int argc, char *argv[]){
 	FILE *fptr = fopen(argv[1], "r");
@@ -111,7 +111,6 @@ void process_index(char * input, int *i){
 }
 
 void print_token(){
-//	printf("prev %d current %d\n",previous,current);
 	//print previous
 	set_token_type(previous);
 	if(strlen(token) > 0){
@@ -140,12 +139,9 @@ void set_previous_and_current(char *input, int *i){
 	int octal = previous==OCTAL;
 	int floating = previous==FLOAT;
 
-
-
 	if(isspace(c)){
 		current = SPACE;
 	}
-
 
 	else if(isalpha(c)){
 		int valid_exponent1 = starts_with("e", &input[j]) && is_digit(input, j+1);
@@ -188,7 +184,9 @@ void set_previous_and_current(char *input, int *i){
 			current = STRUCT_MEM;
 		}
 	}
-	isOperator(c);
+	else{
+		process_operator(c);
+	}
 }
 
 void set_token_type(type type){
@@ -266,74 +264,74 @@ void set_token_type(type type){
 			sprintf(token_type, "right bracket");
 			break;
 		case COMMA:
-				sprintf(token_type, "comma");
-				break;
+			sprintf(token_type, "comma");
+			break;
 		case COMPLEMENT:
-				sprintf(token_type, "1s complement");
-				break;
+			sprintf(token_type, "1s complement");
+			break;
 		case BITWISEOR:
-				sprintf(token_type, "bitwise OR");
-				break;
+			sprintf(token_type, "bitwise OR");
+			break;
 		case LOGICALOR:
-				sprintf(token_type, "logical OR");
-				break;
+			sprintf(token_type, "logical OR");
+			break;
 		case XOR:
-				sprintf(token_type, "bitwise XOR");
-				break;
-	  case XOREQUALS:
-				sprintf(token_type, "bitwise XOR equals");
-				break;
+			sprintf(token_type, "bitwise XOR");
+			break;
+		case XOREQUALS:
+			sprintf(token_type, "bitwise XOR equals");
+			break;
 		case LESSTHAN:
-				sprintf(token_type, "less than test");
-				break;
+			sprintf(token_type, "less than test");
+			break;
 		case GREATERTHAN:
-				sprintf(token_type, "greater than test");
-				break;
+			sprintf(token_type, "greater than test");
+			break;
 		case LESSTHANOREQUAL:
-				sprintf(token_type, "less than or equal test");
-				break;
+			sprintf(token_type, "less than or equal test");
+			break;
 		case GREATERTHANOREQUAL:
-				sprintf(token_type, "greater than or equal test");
-				break;
+			sprintf(token_type, "greater than or equal test");
+			break;
 		case SHIFTLEFT:
-				sprintf(token_type, "shift left");
-				break;
+			sprintf(token_type, "shift left");
+			break;
 		case SHIFTRIGHT:
-				sprintf(token_type, "shift right");
-				break;
+			sprintf(token_type, "shift right");
+			break;
 		case SHIFTLEFTEQUALS:
-				sprintf(token_type, "shift left equals");
-				break;
+			sprintf(token_type, "shift left equals");
+			break;
 		case CONDITIONALTRUE:
-				sprintf(token_type, "conditional true");
-				break;
+			sprintf(token_type, "conditional true");
+			break;
 		case CONDITIONALFALSE:
-				sprintf(token_type, "conditional false");
-				break;
+			sprintf(token_type, "conditional false");
+			break;
 		case AND:
-				sprintf(token_type, "AND/address operator");
-				break;
+			sprintf(token_type, "AND/address operator");
+			break;
 		case ANDEQUALS:
-				sprintf(token_type, "bitwise AND equals");
-				break;
+			sprintf(token_type, "bitwise AND equals");
+			break;
 		case BITWISEOREQUALS:
-				sprintf(token_type, "bitwise OR equals");
-				break;
+			sprintf(token_type, "bitwise OR equals");
+			break;
 		case LOGICALAND:
-				sprintf(token_type, "logical AND");
-				break;
+			sprintf(token_type, "logical AND");
+			break;
 		case MOD:
-				sprintf(token_type, "modulo");
-				break;
+			sprintf(token_type, "modulo");
+			break;
 		case MODEQUALS:
-				sprintf(token_type, "mod equals");
-				break;
+			sprintf(token_type, "mod equals");
+			break;
 		case STRUCTUREPOINTER:
-				sprintf(token_type, "structure pointer");
-				break;
+			sprintf(token_type, "structure pointer");
+			break;
 		case SIZEOF:
-				sprintf(token_type, "sizeof");
-				break;
+			sprintf(token_type, "sizeof");
+			break;
 	}
 }
 
@@ -377,7 +375,7 @@ int is_digit(char *string, int i){
 
 
 // idenitifies if current token is an operator, then assigns it the proper one.
-void isOperator(char c){
+void process_operator(char c){
 	switch(c){
 	// only need to check one chracter
 	case '(':
@@ -458,9 +456,10 @@ void isOperator(char c){
 			previous = STRUCTUREPOINTER;
 			break;
 		}
+		else{
 			current = GREATERTHAN;
 			break;
-
+		}
 	// nested switch statment
 	case '=':
 		switch(previous){
