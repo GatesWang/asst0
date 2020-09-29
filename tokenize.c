@@ -127,152 +127,6 @@ void print_token(){
 }
 
 
-void set_token_type(type type){
-	switch(type){
-		case WORD :
-			sprintf(token_type, "word");
-			break;
-		case DECIMAL :
-			sprintf(token_type, "decimal");
-			break;
-		case OCTAL :
-			sprintf(token_type, "octal");
-			break;
-		case HEX :
-			sprintf(token_type, "hex");
-			break;
-		case FLOAT :
-			sprintf(token_type, "float");
-			break;
-		case STRUCT_MEM:
-			sprintf(token_type, "struct member");
-			break;
-		case MULTIPLICATION:
-				sprintf(token_type, "multiply/dereference operator");
-				break;
-		case DIVISION:
-				sprintf(token_type, "division");
-				break;
-		case ADDITION:
-				sprintf(token_type, "addition");
-				break;
-		case SUBTRACTION:
-				sprintf(token_type, "minus/subtract operator");
-				break;
-		case ASSIGNMENT:
-				sprintf(token_type, "assignment");
-				break;
-		case PLUSEQUALS:
-				sprintf(token_type, "plus equals");
-				break;
-		case MINUSEQUALS:
-				sprintf(token_type, "minus equals");
-				break;
-		case TIMESEQUALS:
-				sprintf(token_type, "times equals");
-				break;
-		case DIVIDEEQUALS:
-				sprintf(token_type, "divide equals");
-				break;
-		case EQUALITY:
-				sprintf(token_type, "equality test");
-				break;
-		case INCREMENT:
-				sprintf(token_type, "increment");
-				break;
-		case DECREMENT:
-				sprintf(token_type, "decrement");
-				break;
-		case NEGATE:
-					sprintf(token_type, "negate");
-					break;
-		case INEQUALITY:
-					sprintf(token_type, "inequality test");
-					break;
-		case LEFTPARENTHESIS:
-				sprintf(token_type, "left parenthesis");
-				break;
-		case RIGHTPARENTHESIS:
-				sprintf(token_type, "right parenthesis");
-				break;
-		case LEFTBRACKET:
-				sprintf(token_type, "left bracket");
-				break;
-		case RIGHTBRACKET:
-				sprintf(token_type, "right bracket");
-				break;
-		case COMMA:
-					sprintf(token_type, "comma");
-					break;
-		case COMPLEMENT:
-					sprintf(token_type, "1s complement");
-					break;
-		case BITWISEOR:
-					sprintf(token_type, "bitwise OR");
-					break;
-		case LOGICALOR:
-					sprintf(token_type, "logical OR");
-					break;
-		case XOR:
-					sprintf(token_type, "bitwise XOR");
-					break;
-	  case XOREQUALS:
-					sprintf(token_type, "bitwise XOR equals");
-					break;
-		case LESSTHAN:
-					sprintf(token_type, "less than test");
-					break;
-		case GREATERTHAN:
-					sprintf(token_type, "greater than test");
-					break;
-		case LESSTHANOREQUAL:
-					sprintf(token_type, "less than or equal test");
-					break;
-		case GREATERTHANOREQUAL:
-					sprintf(token_type, "greater than or equal test");
-					break;
-		case SHIFTLEFT:
-					sprintf(token_type, "shift left");
-					break;
-		case SHIFTRIGHT:
-					sprintf(token_type, "shift right");
-					break;
-		case SHIFTLEFTEQUALS:
-					sprintf(token_type, "shift left equals");
-					break;
-		case CONDITIONALTRUE:
-					sprintf(token_type, "conditional true");
-					break;
-		case CONDITIONALFALSE:
-					sprintf(token_type, "conditional false");
-					break;
-		case AND:
-					sprintf(token_type, "AND/address operator");
-					break;
-		case ANDEQUALS:
-					sprintf(token_type, "bitwise AND equals");
-					break;
-		case BITWISEOREQUALS:
-					sprintf(token_type, "bitwise OR equals");
-					break;
-		case LOGICALAND:
-					sprintf(token_type, "logical AND");
-					break;
-		case MOD:
-					sprintf(token_type, "modulo");
-					break;
-		case MODEQUALS:
-					sprintf(token_type, "mod equals");
-					break;
-		case STRUCTUREPOINTER:
-					sprintf(token_type, "structure pointer");
-					break;
-		case SIZEOF:
-					sprintf(token_type, "sizeof");
-					break;
-	}
-}
-
 // i is the current index from the input, input is array holding input string
 void set_previous_and_current(char *input, int *i){
 	int j = *i;
@@ -337,6 +191,151 @@ void set_previous_and_current(char *input, int *i){
 	isOperator(c);
 }
 
+void set_token_type(type type){
+	switch(type){
+		case WORD :
+			sprintf(token_type, "word");
+			break;
+		case DECIMAL :
+			sprintf(token_type, "decimal");
+			break;
+		case OCTAL :
+			sprintf(token_type, "octal");
+			break;
+		case HEX :
+			sprintf(token_type, "hex");
+			break;
+		case FLOAT :
+			sprintf(token_type, "float");
+			break;
+		case STRUCT_MEM:
+			sprintf(token_type, "struct member");
+			break;
+		case MULTIPLICATION:
+			sprintf(token_type, "multiply/dereference operator");
+			break;
+		case DIVISION:
+			sprintf(token_type, "division");
+			break;
+		case ADDITION:
+				sprintf(token_type, "addition");
+				break;
+		case SUBTRACTION:
+			sprintf(token_type, "minus/subtract operator");
+			break;
+		case ASSIGNMENT:
+			sprintf(token_type, "assignment");
+			break;
+		case PLUSEQUALS:
+			sprintf(token_type, "plus equals");
+			break;
+		case MINUSEQUALS:
+			sprintf(token_type, "minus equals");
+			break;
+		case TIMESEQUALS:
+			sprintf(token_type, "times equals");
+			break;
+		case DIVIDEEQUALS:
+			sprintf(token_type, "divide equals");
+			break;
+		case EQUALITY:
+			sprintf(token_type, "equality test");
+			break;
+		case INCREMENT:
+			sprintf(token_type, "increment");
+			break;
+		case DECREMENT:
+			sprintf(token_type, "decrement");
+			break;
+		case NEGATE:
+			sprintf(token_type, "negate");
+			break;
+		case INEQUALITY:
+			sprintf(token_type, "inequality test");
+			break;
+		case LEFTPARENTHESIS:
+			sprintf(token_type, "left parenthesis");
+			break;
+		case RIGHTPARENTHESIS:
+			sprintf(token_type, "right parenthesis");
+			break;
+		case LEFTBRACKET:
+			sprintf(token_type, "left bracket");
+			break;
+		case RIGHTBRACKET:
+			sprintf(token_type, "right bracket");
+			break;
+		case COMMA:
+				sprintf(token_type, "comma");
+				break;
+		case COMPLEMENT:
+				sprintf(token_type, "1s complement");
+				break;
+		case BITWISEOR:
+				sprintf(token_type, "bitwise OR");
+				break;
+		case LOGICALOR:
+				sprintf(token_type, "logical OR");
+				break;
+		case XOR:
+				sprintf(token_type, "bitwise XOR");
+				break;
+	  case XOREQUALS:
+				sprintf(token_type, "bitwise XOR equals");
+				break;
+		case LESSTHAN:
+				sprintf(token_type, "less than test");
+				break;
+		case GREATERTHAN:
+				sprintf(token_type, "greater than test");
+				break;
+		case LESSTHANOREQUAL:
+				sprintf(token_type, "less than or equal test");
+				break;
+		case GREATERTHANOREQUAL:
+				sprintf(token_type, "greater than or equal test");
+				break;
+		case SHIFTLEFT:
+				sprintf(token_type, "shift left");
+				break;
+		case SHIFTRIGHT:
+				sprintf(token_type, "shift right");
+				break;
+		case SHIFTLEFTEQUALS:
+				sprintf(token_type, "shift left equals");
+				break;
+		case CONDITIONALTRUE:
+				sprintf(token_type, "conditional true");
+				break;
+		case CONDITIONALFALSE:
+				sprintf(token_type, "conditional false");
+				break;
+		case AND:
+				sprintf(token_type, "AND/address operator");
+				break;
+		case ANDEQUALS:
+				sprintf(token_type, "bitwise AND equals");
+				break;
+		case BITWISEOREQUALS:
+				sprintf(token_type, "bitwise OR equals");
+				break;
+		case LOGICALAND:
+				sprintf(token_type, "logical AND");
+				break;
+		case MOD:
+				sprintf(token_type, "modulo");
+				break;
+		case MODEQUALS:
+				sprintf(token_type, "mod equals");
+				break;
+		case STRUCTUREPOINTER:
+				sprintf(token_type, "structure pointer");
+				break;
+		case SIZEOF:
+				sprintf(token_type, "sizeof");
+				break;
+	}
+}
 
 /*
 	compares prefix string with location at index pointer
@@ -353,6 +352,7 @@ int starts_with(char * prefix, char * string){
 int is_octal(char *string, int i){
 	if(i<strlen(string)){
 		int d = (string[i] - '0');
+
 		return (d>=0 && d<=7);
 	}
 	return 0;
@@ -411,10 +411,10 @@ void isOperator(char c){
 	case '!':
 			current = NEGATE;
 			break;
-case '?':
+	case '?':
 			current = CONDITIONALTRUE;
 			break;
-case ':':
+	case ':':
 			current = CONDITIONALFALSE;
 			break;
 	case '%':
@@ -435,8 +435,10 @@ case ':':
 			previous = DECREMENT;
 			break;
 		}
+		else if(previous != FLOAT){
 			current = SUBTRACTION;
-			break;
+		}
+		break;
 	case '<':
 		if (previous == LESSTHAN){
 			current = SHIFTLEFT;
@@ -459,7 +461,7 @@ case ':':
 			current = GREATERTHAN;
 			break;
 
-// nested switch statment
+	// nested switch statment
 	case '=':
 		switch(previous){
 			case ASSIGNMENT:
@@ -483,29 +485,29 @@ case ':':
 				previous = DIVIDEEQUALS;
 				break;
 			case NEGATE:
-					current = INEQUALITY;
-					previous = INEQUALITY;
-					break;
+				current = INEQUALITY;
+				previous = INEQUALITY;
+				break;
 			case LESSTHAN:
-					current = LESSTHANOREQUAL;
-					previous = LESSTHANOREQUAL;
-					break;
+				current = LESSTHANOREQUAL;
+				previous = LESSTHANOREQUAL;
+				break;
 			case GREATERTHAN:
-					current = GREATERTHANOREQUAL;
-					previous = GREATERTHANOREQUAL;
-					break;
+				current = GREATERTHANOREQUAL;
+				previous = GREATERTHANOREQUAL;
+				break;
 			case SHIFTLEFT:
 				current = SHIFTLEFTEQUALS;
 				previous = SHIFTLEFTEQUALS;
 				break;
 			case SHIFTRIGHT:
-						current = SHIFTRIGHTEQUALS;
-						previous = SHIFTRIGHTEQUALS;
-						break;
+				current = SHIFTRIGHTEQUALS;
+				previous = SHIFTRIGHTEQUALS;
+				break;
 			case AND:
-							current = ANDEQUALS;
-							previous= ANDEQUALS;
-							break;
+				current = ANDEQUALS;
+				previous= ANDEQUALS;
+				break;
 			case XOR:
 				current = XOREQUALS;
 				previous = XOREQUALS;
@@ -515,9 +517,9 @@ case ':':
 				previous = BITWISEOREQUALS;
 				break;
 			case MOD:
-								current = MODEQUALS;
-								previous = MODEQUALS;
-								break;
+				current = MODEQUALS;
+				previous = MODEQUALS;
+				break;
 			default:
 				current = ASSIGNMENT;
 			}
@@ -529,28 +531,26 @@ case ':':
 			previous = LOGICALOR;
 			break;
 		}
-			current = BITWISEOR;
-			break;
+		current = BITWISEOR;
+		break;
 	case '&':
 		if (previous == AND){
 			current = LOGICALAND;
 			previous = LOGICALAND;
 			break;
 		}
-			current = AND;
-			break;
-//string compare for sizeof operator
-	default:
-	if (current == WORD){
-			 if(strcmp(token,"sizeo") == 0 && c =='f'){
-				 previous = SIZEOF;
-  			 current = SIZEOF;
-			 }
-
-		 }
-
+		current = AND;
 		break;
-}
+	//string compare for sizeof operator
+	default:
+		if (current == WORD){
+			 if(strcmp(token,"sizeo") == 0 && c =='f'){
+					 previous = SIZEOF;
+	  				 current = SIZEOF;
+			 }
+		}
+		break;
+	}
 }
 
 /*
