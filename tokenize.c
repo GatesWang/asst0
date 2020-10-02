@@ -417,7 +417,7 @@ void set_previous_and_current(char * input, int * i) {
   int previousWasDecimal = previous == DECIMAL;
   int previousWasHex = previous == HEX;
   int previousWasOctal = previous == OCTAL;
-  int previousWasFloating = previous == FLOAT;
+  int previousWasFloating = previous == FLOATING;
 
   if (isspace(c)) {
     current = SPACE;
@@ -454,8 +454,8 @@ void set_previous_and_current(char * input, int * i) {
     }
   } else if (c == '.') {
     if ((previousWasDecimal || previousWasOctal) && is_digit(input, j + 1)) {
-      previous = FLOAT;
-      current = FLOAT;
+      previous = FLOATING;
+      current = FLOATING;
     } else {
       current = STRUCT_MEM;
       print_token();
