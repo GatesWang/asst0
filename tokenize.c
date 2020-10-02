@@ -10,9 +10,10 @@ typedef enum _type {
   STRUCT_MEM,
   WORD,
   DECIMAL,
+  FLOAT,
+  FLOAT_WITH_EXPO,
   OCTAL,
   HEX,
-  FLOATING,
   LEFTPARENTHESIS,
   RIGHTPARENTHESIS,
   LEFTBRACKET,
@@ -50,7 +51,6 @@ typedef enum _type {
   LOGICALAND,
   ANDEQUALS,
   CONDITIONALTRUE,
-  FLOAT,
   CONDITIONALFALSE,
   MOD,
   MODEQUALS,
@@ -93,24 +93,32 @@ typedef enum _type {
   SINGLELINECOMMENT
 }
 tokenType;
+tokenType current = NONE;
+tokenType previous = NONE;
 
 //function declerations
+int run_tests(FILE * f);
+
 int is_octal(char * string, int i);
 int is_hex(char * string, int i);
 int is_digit(char * string, int i);
-void process_operator(char c);
 int starts_with(char * prefix, char * string);
-void identifyOperator(char c);
+
+void process_operator(char c);
+void process_index(char * input, int * i);
+void process_alpha(char * input, int * i);
+void process_digit(char * input, int * i);
+
 void set_previous_and_current(char * input, int * i);
 void setTokenTypeString(tokenType type);
+void print_token();
+
+void identifyOperator(char * input, int j);
+void identifyKeyword(char c);
 void isKeyword(char * keyword, tokenType typeOfKeyword, char currentChar);
-void identitfyKeyword(char c);
 
 char tokenTypeString[30];
 char * token;
-
-tokenType current = NONE;
-tokenType previous = NONE;
 
 /*processes the input string then tokenizes it and prints out the result
 parameter : (input string) */
@@ -131,8 +139,9 @@ int tokenize(char * input) {
 parameter : (input string, current index) */
 void process_index(char * input, int * i) {
   set_previous_and_current(input, i);
+
   if (previous != current) {
-    print_token(tokenTypeString, token);
+	print_token();
   }
   //copies current char of the input string to the end of the token string if it not a white space character
   char c = input[ * i];
@@ -151,9 +160,94 @@ void print_token() {
   //set token type for current
   setTokenTypeString(current);
   token[0] = '\0';
-  if (current == HEX) {
-    strcat(token, "0");
+  if(current == HEX){
+      strcat(token, "0");
   }
+}
+
+
+int previousWasFloating(){ return previous == FLOAT;}
+int previousWasFloatingExpo(){ return previous == FLOAT_WITH_EXPO;}
+int previousWasWord(){return previous == WORD;}
+int previousWasDecimal(){return previous == DECIMAL;}
+int previousWasHex(){return previous == HEX;}
+int previousWasOctal(){return previous == OCTAL;}
+
+/* sets or modifies the type for the previous and current token
+	parameter : (input string, current index) */
+void set_previous_and_current(char * input, int * i) {
+  int j = *i;
+  char c = input[j];
+
+  previous = current;
+
+  if (isspace(c)) {
+    current = SPACE;
+  } else if (isalpha(c)) {
+    process_alpha(input, i);
+	return;
+  } else if (isdigit(c)) {
+    process_digit(input, i);
+	return;
+  }
+  identifyOperator(input, j);
+  identifyKeyword(c);
+}
+
+/*processes the index at i, which is assumed to be a digit
+parameter : (input string, index i) */
+void process_digit(char * input, int * i){
+	int j = *i;
+	int is_valid_hex = starts_with("0x", & input[j]) || starts_with("0X", & input[j]);
+    int is_valid_octal = starts_with("0", & input[j]);
+
+    if (!previousWasWord() && !previousWasDecimal() && !previousWasOctal() && !previousWasFloating() && is_valid_hex) {
+      current = HEX;
+      previous = previousWasHex() ? NONE : previous;
+      (*i)++; //skip the '0' and go to 'x' or 'X'
+    } else if (!previousWasWord() && !previousWasHex && !previousWasDecimal() && !previousWasOctal() && !previousWasFloating() && is_valid_octal) {
+      current = OCTAL;
+      previous = previousWasOctal() ? NONE : previous;
+    } else if (previousWasOctal() && !is_octal(input, j)) {
+      current = DECIMAL;
+    } else if (!previousWasHex() && !previousWasWord() && !previousWasOctal() && !previousWasFloating() && !previousWasFloatingExpo()) {
+      current = DECIMAL;
+	}
+}
+
+/*processes the index at i which is assumed to be an alpha
+parameter : (input string) */
+void process_alpha(char * input, int * i){
+	int j = *i;
+	int valid_exponent1 = starts_with("e", & input[j]) && is_digit(input, j + 1);
+    int valid_exponent2 = starts_with("E", & input[j]) && is_digit(input, j + 1);
+    int valid_exponent3 = starts_with("e-", & input[j]) && is_digit(input, j + 2);
+    int valid_exponent4 = starts_with("e+", & input[j]) && is_digit(input, j + 2);
+    int valid_exponent5 = starts_with("E+", & input[j]) && is_digit(input, j + 2);
+    int valid_exponent6 = starts_with("E-", & input[j]) && is_digit(input, j + 2);
+    int no_exponent = is_digit(input, j);
+
+    if(previousWasFloating()){
+		if(valid_exponent1 || valid_exponent2){
+			previous = FLOAT_WITH_EXPO;
+			current = FLOAT_WITH_EXPO;
+		}
+		else if(valid_exponent3 || valid_exponent4 || valid_exponent5 || valid_exponent6){
+			(*i)++; //skip the '+ or '-'
+		    sprintf(token, "%s%c", token, input[j]);
+			previous = FLOAT_WITH_EXPO;
+			current = FLOAT_WITH_EXPO;
+		}
+		else if(!no_exponent){
+			current = WORD;
+		}
+	}
+    else if (!previousWasHex()) {
+		current = WORD;
+    }
+	else if (previousWasHex() && !is_hex(input, j)) {
+		current = WORD;
+    }
 }
 
 // decodes the token type into its proper string representation
@@ -171,8 +265,8 @@ void setTokenTypeString(tokenType type) {
   case HEX:
     sprintf(tokenTypeString, "hexadecimal integer");
     break;
-  case FLOATING:
-    sprintf(tokenTypeString, "floating point");
+  case FLOAT_WITH_EXPO:
+    sprintf(tokenTypeString, "float");
     break;
   case STRUCT_MEM:
     sprintf(tokenTypeString, "struct member");
@@ -402,69 +496,8 @@ void setTokenTypeString(tokenType type) {
   case SINGLELINECOMMENT:
     sprintf(tokenTypeString, " ");
     break;
-
   }
 }
-
-/* sets or modifies the type for the previous and current token
-	parameter : (input string, current index) */
-void set_previous_and_current(char * input, int * i) {
-  int j = * i;
-  char c = input[j];
-
-  previous = current;
-  int previousWasWord = previous == WORD;
-  int previousWasDecimal = previous == DECIMAL;
-  int previousWasHex = previous == HEX;
-  int previousWasOctal = previous == OCTAL;
-  int previousWasFloating = previous == FLOAT;
-
-  if (isspace(c)) {
-    current = SPACE;
-  } else if (isalpha(c)) {
-    int valid_exponent1 = starts_with("e", & input[j]) && is_digit(input, j + 1);
-    int valid_exponent2 = starts_with("E", & input[j]) && is_digit(input, j + 1);
-    int valid_exponent3 = starts_with("e-", & input[j]) && is_digit(input, j + 2);
-    int valid_exponent4 = starts_with("e+", & input[j]) && is_digit(input, j + 2);
-    int valid_exponent5 = starts_with("E+", & input[j]) && is_digit(input, j + 2);
-    int valid_exponent6 = starts_with("E-", & input[j]) && is_digit(input, j + 2);
-    int start_of_exponent = previousWasFloating && (valid_exponent1 || valid_exponent2 || valid_exponent3
-       || valid_exponent4 || valid_exponent5 ||valid_exponent6);
-
-    if (!previousWasHex && !start_of_exponent) {
-      current = WORD;
-    } else if (previousWasHex && !is_hex(input, j)) {
-      current = WORD;
-    }
-  } else if (isdigit(c)) {
-    int is_valid_hex = starts_with("0x", & input[j]) || starts_with("0X", & input[j]);
-    int is_valid_octal = starts_with("0", & input[j]);
-
-    if (!previousWasWord && !previousWasDecimal && !previousWasOctal && !previousWasFloating && is_valid_hex) {
-      current = HEX;
-      previous = previousWasHex ? NONE : previous;
-      ( * i) ++; //skip the '0' and go to 'x' or 'X'
-    } else if (!previousWasWord && !previousWasHex && !previousWasDecimal && !previousWasOctal && !previousWasFloating && is_valid_octal) {
-      current = OCTAL;
-      previous = previousWasOctal ? NONE : previous;
-    } else if (!previousWasHex && !previousWasWord && !previousWasOctal && !previousWasFloating) {
-      current = DECIMAL;
-    } else if (previousWasOctal && !is_octal(input, j)) {
-      current = DECIMAL;
-    }
-  } else if (c == '.') {
-    if ((previousWasDecimal || previousWasOctal) && is_digit(input, j + 1)) {
-      previous = FLOAT;
-      current = FLOAT;
-    } else {
-      current = STRUCT_MEM;
-      print_token();
-    }
-  }
-  identifyOperator(c);
-  identitfyKeyword(c);
-}
-
 /*
 	compares a prefix string with the input string beginning at the current index
 	returns integer > 0 if string begins with the prefix
@@ -481,7 +514,6 @@ int starts_with(char * prefix, char * string) {
 int is_octal(char * string, int i) {
   if (i < strlen(string)) {
     int d = (string[i] - '0');
-
     return (d >= 0 && d <= 7);
   }
   return 0;
@@ -501,16 +533,26 @@ int is_hex(char * string, int i) {
 	parameter : (input string, current index)
 */
 int is_digit(char * string, int i) {
-  return i < strlen(string) && isdigit(string[i]);
+	return i < strlen(string) && isdigit(string[i]);
 }
 
 /*
 idenitifies if the current token is an operator, and assigns it the proper token.
 parameter : (current char from input string)
 */
-void identifyOperator(char c) {
+void identifyOperator(char * input, int j) {
+  char c = input[j];
   switch (c) {
     // only needs to check one chracter
+  case '.' :
+    if ((previousWasDecimal() || previousWasOctal()) && is_digit(input, j + 1)) {
+      previous = FLOAT;
+      current = FLOAT;
+    } else {
+      current = STRUCT_MEM;
+	  print_token();
+    }
+	break;
   case '(':
     current = LEFTPARENTHESIS;
     print_token();
@@ -689,20 +731,6 @@ void identifyOperator(char c) {
       }
       current = AND;
       break;
-
-    default:
-      //digit value for carriage return, newLine, and current characters
-      /*int carriage = (int)'\r';
-	int newLine = (int)'\n';
-	int cNumber = (int)c;
-	if( previous == SINGLELINECOMMENT){
-		if( cNumber != carriage && cNumber != newLine ){
-			current = SINGLELINECOMMENT;
-		}
-	}
-	*/
-
-      break;
   }
 }
 
@@ -718,8 +746,8 @@ void isKeyword(char * keyword, tokenType typeOfKeyword, char currentChar) {
       tokenLength == keywordLength - 1) {
       previous = typeOfKeyword;
       current = typeOfKeyword;
-    } else if (previous == typeOfKeyword) {
-
+    }
+    else if (previous == typeOfKeyword) {
       previous = WORD;
       current = WORD;
     }
@@ -730,7 +758,7 @@ void isKeyword(char * keyword, tokenType typeOfKeyword, char currentChar) {
 checks if the token is a any of the 32 keywords in c and sets the token appropriatly
 parameter : (current char from input string)
 */
-void identitfyKeyword(char c) {
+void identifyKeyword(char c) {
   isKeyword("sizeof", SIZEOF, c);
   isKeyword("int", INT, c);
   isKeyword("float", FLOAT, c);
