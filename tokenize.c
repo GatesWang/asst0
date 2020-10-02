@@ -24,9 +24,75 @@ int run_tests(FILE *f);
 int tokenize(char *string);
 void process_index(char * input, int *i);
 void print_token();
+<<<<<<< HEAD
+=======
+char * token_type;
+char * token;
+
+typedef enum _type {
+	NONE = 0,
+	SPACE = 1,
+	STRUCT_MEM = 2,
+	WORD = 3,
+	DECIMAL = 4,
+	OCTAL = 5,
+	HEX = 6,
+	FLOAT = 7,
+	LEFTPARENTHESIS,
+	RIGHTPARENTHESIS,
+	LEFTBRACKET,
+	RIGHTBRACKET,
+	SUBTRACTION,
+	DECREMENT,
+	ADDITION,
+	INCREMENT,
+	COMMA,
+	MULTIPLICATION,
+	DIVISION,
+	ASSIGNMENT,
+	PLUSEQUALS,
+	MINUSEQUALS,
+	DIVIDEEQUALS,
+	TIMESEQUALS,
+	EQUALITY,
+	BITWISEOR,
+	BITWISEOREQUALS,
+	LOGICALOR,
+	COMPLEMENT,
+	XOR,
+	XOREQUALS,
+	LESSTHAN,
+	GREATERTHAN,
+	LESSTHANOREQUAL,
+	GREATERTHANOREQUAL,
+	SHIFTLEFT,
+	SHIFTRIGHT,
+	SHIFTLEFTEQUALS,
+	SHIFTRIGHTEQUALS,
+	INEQUALITY,
+	NEGATE,
+	AND,
+	LOGICALAND,
+	ANDEQUALS,
+	CONDITIONALTRUE,
+	CONDITIONALFALSE,
+	MOD,
+	MODEQUALS,
+	STRUCTUREPOINTER,
+	SIZEOF
+
+} type;
+
+type current = NONE;
+type previous = NONE;
+void set_previous_and_current(char *input, int *i);
+void set_token_type();
+
+>>>>>>> 8c0909869c195c9e2b271cb936d700ba7a3f64ee
 int is_octal(char *string, int i);
 int is_hex(char *string, int i);
 int is_digit(char *string, int i);
+void process_operator(char c);
 int starts_with(char *prefix, char *string);
 void identifyOperator(char c);
 void set_previous_and_current(char *input, int *i);
@@ -54,6 +120,10 @@ int tokenize(char *input){
 	current = NONE;
 	previous = NONE;
 	token = malloc(1000 * sizeof(char));
+<<<<<<< HEAD
+=======
+
+>>>>>>> 8c0909869c195c9e2b271cb936d700ba7a3f64ee
 	for (int i = 0; i < strlen(input); i++){
 		process_index(input, &i);
 	}
@@ -77,6 +147,7 @@ void process_index(char * input, int *i){
 	}
 }
 
+<<<<<<< HEAD
 //prints the token and token type
 void print_token(){
 	//prints previous
@@ -86,12 +157,24 @@ void print_token(){
 	}
 	//set token type for current
 	setTokenTypeString(current);
+=======
+void print_token(){
+	//print previous
+	set_token_type(previous);
+	if(strlen(token) > 0){
+		printf("%s %s\n", token_type, token);
+	}
+
+	//set token_type for current
+	set_token_type(current);
+>>>>>>> 8c0909869c195c9e2b271cb936d700ba7a3f64ee
 	token[0] = '\0';
 	if(current==HEX){
 		strcat(token,"0");
 	}
 }
 
+<<<<<<< HEAD
 // decodes the token type into its proper string representation
 void setTokenTypeString(tokenType type){
 	switch(type){
@@ -344,6 +427,10 @@ void setTokenTypeString(tokenType type){
 
 /* sets or modifies the type for the previous and current token
 	parameter : (input string, current index) */
+=======
+
+// i is the current index from the input, input is array holding input string
+>>>>>>> 8c0909869c195c9e2b271cb936d700ba7a3f64ee
 void set_previous_and_current(char *input, int *i){
 	int j = *i;
 	char c = input[j];
@@ -402,8 +489,160 @@ void set_previous_and_current(char *input, int *i){
 			print_token();
 		}
 	}
+<<<<<<< HEAD
 	identifyOperator(c);
 	identitfyKeyword(c);
+=======
+	else{
+		process_operator(c);
+	}
+}
+
+void set_token_type(type type){
+	switch(type){
+		case WORD :
+			sprintf(token_type, "word");
+			break;
+		case DECIMAL :
+			sprintf(token_type, "decimal");
+			break;
+		case OCTAL :
+			sprintf(token_type, "octal");
+			break;
+		case HEX :
+			sprintf(token_type, "hex");
+			break;
+		case FLOAT :
+			sprintf(token_type, "float");
+			break;
+		case STRUCT_MEM:
+			sprintf(token_type, "struct member");
+			break;
+		case MULTIPLICATION:
+			sprintf(token_type, "multiply/dereference operator");
+			break;
+		case DIVISION:
+			sprintf(token_type, "division");
+			break;
+		case ADDITION:
+				sprintf(token_type, "addition");
+				break;
+		case SUBTRACTION:
+			sprintf(token_type, "minus/subtract operator");
+			break;
+		case ASSIGNMENT:
+			sprintf(token_type, "assignment");
+			break;
+		case PLUSEQUALS:
+			sprintf(token_type, "plus equals");
+			break;
+		case MINUSEQUALS:
+			sprintf(token_type, "minus equals");
+			break;
+		case TIMESEQUALS:
+			sprintf(token_type, "times equals");
+			break;
+		case DIVIDEEQUALS:
+			sprintf(token_type, "divide equals");
+			break;
+		case EQUALITY:
+			sprintf(token_type, "equality test");
+			break;
+		case INCREMENT:
+			sprintf(token_type, "increment");
+			break;
+		case DECREMENT:
+			sprintf(token_type, "decrement");
+			break;
+		case NEGATE:
+			sprintf(token_type, "negate");
+			break;
+		case INEQUALITY:
+			sprintf(token_type, "inequality test");
+			break;
+		case LEFTPARENTHESIS:
+			sprintf(token_type, "left parenthesis");
+			break;
+		case RIGHTPARENTHESIS:
+			sprintf(token_type, "right parenthesis");
+			break;
+		case LEFTBRACKET:
+			sprintf(token_type, "left bracket");
+			break;
+		case RIGHTBRACKET:
+			sprintf(token_type, "right bracket");
+			break;
+		case COMMA:
+			sprintf(token_type, "comma");
+			break;
+		case COMPLEMENT:
+			sprintf(token_type, "1s complement");
+			break;
+		case BITWISEOR:
+			sprintf(token_type, "bitwise OR");
+			break;
+		case LOGICALOR:
+			sprintf(token_type, "logical OR");
+			break;
+		case XOR:
+			sprintf(token_type, "bitwise XOR");
+			break;
+		case XOREQUALS:
+			sprintf(token_type, "bitwise XOR equals");
+			break;
+		case LESSTHAN:
+			sprintf(token_type, "less than test");
+			break;
+		case GREATERTHAN:
+			sprintf(token_type, "greater than test");
+			break;
+		case LESSTHANOREQUAL:
+			sprintf(token_type, "less than or equal test");
+			break;
+		case GREATERTHANOREQUAL:
+			sprintf(token_type, "greater than or equal test");
+			break;
+		case SHIFTLEFT:
+			sprintf(token_type, "shift left");
+			break;
+		case SHIFTRIGHT:
+			sprintf(token_type, "shift right");
+			break;
+		case SHIFTLEFTEQUALS:
+			sprintf(token_type, "shift left equals");
+			break;
+		case CONDITIONALTRUE:
+			sprintf(token_type, "conditional true");
+			break;
+		case CONDITIONALFALSE:
+			sprintf(token_type, "conditional false");
+			break;
+		case AND:
+			sprintf(token_type, "AND/address operator");
+			break;
+		case ANDEQUALS:
+			sprintf(token_type, "bitwise AND equals");
+			break;
+		case BITWISEOREQUALS:
+			sprintf(token_type, "bitwise OR equals");
+			break;
+		case LOGICALAND:
+			sprintf(token_type, "logical AND");
+			break;
+		case MOD:
+			sprintf(token_type, "modulo");
+			break;
+		case MODEQUALS:
+			sprintf(token_type, "mod equals");
+			break;
+		case STRUCTUREPOINTER:
+			sprintf(token_type, "structure pointer");
+			break;
+		case SIZEOF:
+			sprintf(token_type, "sizeof");
+			break;
+	}
+>>>>>>> 8c0909869c195c9e2b271cb936d700ba7a3f64ee
 }
 
 /*
@@ -445,6 +684,7 @@ int is_digit(char *string, int i){
 	return i<strlen(string) && isdigit(string[i]);
 }
 
+<<<<<<< HEAD
 /*
 idenitifies if the current token is an operator, and assigns it the proper token.
 parameter : (current char from input string)
@@ -455,6 +695,17 @@ void identifyOperator(char c){
 	case '(':
 		current = LEFTPARENTHESIS;
 		print_token();
+=======
+
+
+// idenitifies if current token is an operator, then assigns it the proper one.
+void process_operator(char c){
+	switch(c){
+	// only need to check one chracter
+	case '(':
+		current = LEFTPARENTHESIS;
+		printf("%d\n",current);
+>>>>>>> 8c0909869c195c9e2b271cb936d700ba7a3f64ee
 		break;
 	case ')':
 		current = RIGHTPARENTHESIS;
@@ -470,6 +721,7 @@ void identifyOperator(char c){
 		break;
 	case ',':
 			current = COMMA;
+<<<<<<< HEAD
 				print_token();
 			break;
 	case '~':
@@ -511,6 +763,34 @@ void identifyOperator(char c){
 			break;
 
 	// need to check the previous type to confirm the type of token
+=======
+			break;
+	case '~':
+			current = COMPLEMENT;
+			break;
+	case '^':
+			current = XOR;
+			break;
+	case '*':
+			current = MULTIPLICATION;
+			break;
+	case '/':
+			current = DIVISION;
+			break;
+	case '!':
+			current = NEGATE;
+			break;
+	case '?':
+			current = CONDITIONALTRUE;
+			break;
+	case ':':
+			current = CONDITIONALFALSE;
+			break;
+	case '%':
+			current = MOD;
+			break;
+	// need to check the previous type to confirm the type
+>>>>>>> 8c0909869c195c9e2b271cb936d700ba7a3f64ee
 	case '+':
 		if (previous == ADDITION){
 			current = INCREMENT;
@@ -539,6 +819,27 @@ void identifyOperator(char c){
 		}
 			current = LESSTHAN;
 			break;
+<<<<<<< HEAD
+=======
+	case '-':
+		if (previous == SUBTRACTION){
+			current = DECREMENT;
+			previous = DECREMENT;
+			break;
+		}
+		else if(previous != FLOAT){
+			current = SUBTRACTION;
+		}
+		break;
+	case '<':
+		if (previous == LESSTHAN){
+			current = SHIFTLEFT;
+			previous = SHIFTLEFT;
+			break;
+		}
+			current = LESSTHAN;
+			break;
+>>>>>>> 8c0909869c195c9e2b271cb936d700ba7a3f64ee
 	case '>':
 		if (previous == GREATERTHAN){
 			current = SHIFTRIGHT;
@@ -554,7 +855,11 @@ void identifyOperator(char c){
 			current = GREATERTHAN;
 			break;
 		}
+<<<<<<< HEAD
 	// nested switch statment for operators containing =
+=======
+	// nested switch statment
+>>>>>>> 8c0909869c195c9e2b271cb936d700ba7a3f64ee
 	case '=':
 		switch(previous){
 			case ASSIGNMENT:
@@ -634,6 +939,7 @@ void identifyOperator(char c){
 		}
 		current = AND;
 		break;
+<<<<<<< HEAD
 
 	default:
 	//digit value for carriage return, newLine, and current characters
@@ -648,6 +954,17 @@ void identifyOperator(char c){
 	*/
 
 	break;
+=======
+	//string compare for sizeof operator
+	default:
+		if (current == WORD){
+			 if(strcmp(token,"sizeo") == 0 && c =='f'){
+					 previous = SIZEOF;
+	  				 current = SIZEOF;
+			 }
+		}
+		break;
+>>>>>>> 8c0909869c195c9e2b271cb936d700ba7a3f64ee
 	}
 }
 
