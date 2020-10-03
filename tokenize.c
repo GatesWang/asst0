@@ -90,7 +90,13 @@ typedef enum _type {
   DOUBLEQUOTE,
   QUOTEEND,
   FRONTSLASH,
-  SINGLELINECOMMENT
+  SINGLELINECOMMENT,
+  BLOCKCOMMENT,
+  COMMENTEND,
+  ENDSTAR,
+  SINGLEQUOTE,
+  DOUBLEQUOTE,
+
 }
 tokenType;
 
@@ -396,16 +402,85 @@ void setTokenTypeString(tokenType type) {
   case UNSIGNED:
     sprintf(tokenTypeString, "unsigned");
     break;
-  case QUOTEEND:
+  case DOUBLEQUOTE:
     sprintf(tokenTypeString, "string");
     break;
-  case SINGLELINECOMMENT:
-    sprintf(tokenTypeString, " ");
+  case SINGLEQUOTE:
+    sprintf(tokenTypeString, "string");
     break;
+
 
   }
 }
+//-----------------------------------------------------------------------------------
+void isComment(){
+//digit value for carriage return, newLine, and current character
+int carriageReturn = (int)'\r';
+int newLine = (int)'\n';
+int digitValueOfc = (int)c;
+if( previous == SINGLELINECOMMENT){
+if( digitValueOfc == carriageReturn || digitValueOfc == newLine ){
+  current = COMMENTEND;
+  token[0] = '\0';
+} else {
+  current = SINGLELINECOMMENT;
+}
+}
 
+if(previous == BLOCKCOMMENT){
+    if( c == '*'){
+      current = ENDSTAR;
+      previous = ENDSTAR;
+    }
+    else {
+      current = BLOCKCOMMENT;
+    }
+
+}
+if (previous == ENDSTAR){
+  if( c == '/''){
+      current = COMMENTEND;
+      current = COMMENTEND;
+      token[0] = '\0';
+      c = '';
+  } else {
+    current = BLOCKCOMMENT;
+    previous = BLOCKCOMMENT;
+  }
+}
+
+isString{
+  if (c == '\''){
+    if (previous == SINGLEQUOTE){
+      current = SPACE;
+      sprintf(token, "%s%c", token, c);
+
+    }
+
+  }else {
+      current == SINGLEQUOTE;
+    }
+  if (c == '\"){
+      if (previous == DOUBLEQUOTE){
+        current = SPACE;
+        sprintf(token, "%s%c", token, c);
+
+      }
+
+    }else{
+        current == DOUBLEQUOTE;
+      }
+      if (previous = SINGLEQUOTE){
+        current == SINGLEQUOTE;
+      }
+      if (previous = DOUBLEQUOTE){
+        current == DOUBLE;
+      }
+  }
+
+}
+
+}
 /* sets or modifies the type for the previous and current token
 	parameter : (input string, current index) */
 void set_previous_and_current(char * input, int * i) {
@@ -540,17 +615,20 @@ void identifyOperator(char c) {
     print_token();
     break;
   case '*':
+   if (previous == DIVISION){
+      current = BLOCKCOMMENT;
+      previous = BLOCKCOMMENT;
+      break;
+    }
     current = MULTIPLICATION;
-    print_token();
     break;
   case '/':
-    /*if (previous == DIVISION){
+    if (previous == DIVISION){
     	  current = SINGLELINECOMMENT;
     		previous = SINGLELINECOMMENT;
     		break;
-    	}*/
+    	}
     current = DIVISION;
-    print_token();
     break;
   case '!':
     current = NEGATE;
@@ -689,19 +767,7 @@ void identifyOperator(char c) {
       }
       current = AND;
       break;
-
-    default:
-      //digit value for carriage return, newLine, and current characters
-      /*int carriage = (int)'\r';
-	int newLine = (int)'\n';
-	int cNumber = (int)c;
-	if( previous == SINGLELINECOMMENT){
-		if( cNumber != carriage && cNumber != newLine ){
-			current = SINGLELINECOMMENT;
-		}
-	}
-	*/
-
+    default;
       break;
   }
 }
