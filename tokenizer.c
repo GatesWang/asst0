@@ -11,6 +11,7 @@ typedef enum _type {
   WORD,
   DECIMAL,
   FLOAT,
+  FLOATING,
   FLOAT_WITH_EXPO,
   OCTAL,
   HEX,
@@ -93,14 +94,16 @@ typedef enum _type {
   SINGLELINECOMMENT,
   BLOCKCOMMENT,
   COMMENTEND,
-  ENDSTAR,
-  SINGLEQUOTE,
-  DOUBLEQUOTE,
-
+  ENDSTAR
 }
 tokenType;
+
+//global variable
 tokenType current = NONE;
 tokenType previous = NONE;
+char tokenTypeString[30];
+int tokenSize = 100;
+char * token;
 
 //function declerations
 int run_tests(FILE * f);
@@ -110,7 +113,6 @@ int is_hex(char * string, int i);
 int is_digit(char * string, int i);
 int starts_with(char * prefix, char * string);
 
-void process_operator(char c);
 void process_index(char * input, int * i);
 void process_alpha(char * input, int * i);
 void process_digit(char * input, int * i);
@@ -122,22 +124,25 @@ void print_token();
 void identifyOperator(char * input, int j);
 void identifyKeyword(char c);
 void isKeyword(char * keyword, tokenType typeOfKeyword, char currentChar);
-
-char tokenTypeString[30];
-char * token;
+void isComment(char c);
+void isString(char * input, int j);
 
 /*processes the input string then tokenizes it and prints out the result
 parameter : (input string) */
 int tokenize(char * input) {
   current = NONE;
   previous = NONE;
-  token = (char *)malloc(5* sizeof(char));
+  token = malloc(100 * sizeof(char));
   for (int i = 0; i < strlen(input); i++) {
     process_index(input, & i);
   }
   setTokenTypeString(current);
-  // prints last token
+  // prints last token unless it is a comment
+  if(current != SPACE && current != COMMENTEND && current !=SINGLELINECOMMENT)
+{
   printf("%s: \"%s\"\n", tokenTypeString, token);
+}
+
   return 0;
 }
 
@@ -152,6 +157,10 @@ void process_index(char * input, int * i) {
   //copies current char of the input string to the end of the token string if it not a white space character
   char c = input[ * i];
   if (current != SPACE) {
+    if(strlen(token)+1 >= tokenSize){
+      tokenSize += tokenSize;
+      token = (char*)realloc(token, tokenSize * sizeof(char));
+    }
     sprintf(token, "%s%c", token, c);
   }
 }
@@ -160,7 +169,7 @@ void process_index(char * input, int * i) {
 void print_token() {
   //prints previous
   setTokenTypeString(previous);
-  if (strlen(token) > 0) {
+  if (strlen(token) > 0 && previous != COMMENTEND) {
     printf("%s: \"%s\"\n", tokenTypeString, token);
   }
   //set token type for current
@@ -168,11 +177,11 @@ void print_token() {
   token[0] = '\0';
   if(current == HEX){
       strcat(token, "0");
-  }
+}
 }
 
-
-int previousWasFloating(){ return previous == FLOAT;}
+//return a digit > 0 if the previous token was of a specific type
+int previousWasFloating(){ return previous == FLOATING;}
 int previousWasFloatingExpo(){ return previous == FLOAT_WITH_EXPO;}
 int previousWasWord(){return previous == WORD;}
 int previousWasDecimal(){return previous == DECIMAL;}
@@ -191,38 +200,41 @@ void set_previous_and_current(char * input, int * i) {
     current = SPACE;
   } else if (isalpha(c)) {
     process_alpha(input, i);
-	return;
+
   } else if (isdigit(c)) {
     process_digit(input, i);
-	return;
+
   }
+  isComment(c);
   identifyOperator(input, j);
+  isString(input, j);
   identifyKeyword(c);
 }
 
-/*processes the index at i, which is assumed to be a digit
+/*processes the index at i, which is assumed to be a digit and assigns the proper token
 parameter : (input string, index i) */
 void process_digit(char * input, int * i){
 	int j = *i;
 	int is_valid_hex = starts_with("0x", & input[j]) || starts_with("0X", & input[j]);
     int is_valid_octal = starts_with("0", & input[j]);
 
-    if (!previousWasWord() && !previousWasDecimal() && !previousWasOctal() && !previousWasFloating() && is_valid_hex) {
+    if (!previousWasWord() && !previousWasDecimal() && !previousWasOctal() && !previousWasFloating() && !previousWasFloatingExpo() && is_valid_hex) {
       current = HEX;
       previous = previousWasHex() ? NONE : previous;
       (*i)++; //skip the '0' and go to 'x' or 'X'
-    } else if (!previousWasWord() && !previousWasHex && !previousWasDecimal() && !previousWasOctal() && !previousWasFloating() && is_valid_octal) {
+    } else if (!previousWasWord() && !previousWasHex() && !previousWasDecimal() && !previousWasOctal() && !previousWasFloating() && !previousWasFloatingExpo() && is_valid_octal) {
       current = OCTAL;
       previous = previousWasOctal() ? NONE : previous;
     } else if (previousWasOctal() && !is_octal(input, j)) {
       current = DECIMAL;
+      previous = DECIMAL;
     } else if (!previousWasHex() && !previousWasWord() && !previousWasOctal() && !previousWasFloating() && !previousWasFloatingExpo()) {
       current = DECIMAL;
 	}
 }
 
-/*processes the index at i which is assumed to be an alpha
-parameter : (input string) */
+/*processes the index at i which is assumed to be an alpha and assigns the proper token
+parameter : (input string, index) */
 void process_alpha(char * input, int * i){
 	int j = *i;
 	int valid_exponent1 = starts_with("e", & input[j]) && is_digit(input, j + 1);
@@ -272,7 +284,10 @@ void setTokenTypeString(tokenType type) {
     sprintf(tokenTypeString, "hexadecimal integer");
     break;
   case FLOAT_WITH_EXPO:
-    sprintf(tokenTypeString, "float");
+    sprintf(tokenTypeString, "floating point");
+    break;
+  case FLOATING:
+    sprintf(tokenTypeString, "floating point");
     break;
   case STRUCT_MEM:
     sprintf(tokenTypeString, "struct member");
@@ -504,19 +519,27 @@ void setTokenTypeString(tokenType type) {
     break;
 
 
+
   }
 }
-//-----------------------------------------------------------------------------------
-void isComment(){
+/*determines when a comment ends and ensures that none of the characters
+between the beginning and the end of the comment are printed
+assumes that the beginning of a comment was set by isOperator();
+parameter : (current chracter from input string)
+*/
+void isComment(char c){
 //digit value for carriage return, newLine, and current character
 int carriageReturn = (int)'\r';
 int newLine = (int)'\n';
 int digitValueOfc = (int)c;
+int null = (int)'\0';
 if( previous == SINGLELINECOMMENT){
 if( digitValueOfc == carriageReturn || digitValueOfc == newLine ){
   current = COMMENTEND;
+  previous = COMMENTEND;
   token[0] = '\0';
-} else {
+  tokenTypeString[0] = '\0';
+} else{
   current = SINGLELINECOMMENT;
 }
 }
@@ -531,48 +554,69 @@ if(previous == BLOCKCOMMENT){
     }
 
 }
-if (previous == ENDSTAR){
-  if( c == '/''){
-      current = COMMENTEND;
-      current = COMMENTEND;
-      token[0] = '\0';
-      c = '';
-  } else {
-    current = BLOCKCOMMENT;
-    previous = BLOCKCOMMENT;
-  }
+if( c == '/'){
+if (previous==ENDSTAR){
+  current = COMMENTEND;
+  previous = COMMENTEND;
+  token[0] = '\0';
+  tokenTypeString[0] = '\0';
+}
+}
 }
 
-isString{
-  if (c == '\''){
-    if (previous == SINGLEQUOTE){
-      current = SPACE;
+/*
+determines if there are a matching ' or " then assigns everthing inside to a
+string token, if no matching ' or " is found assigns the word token to the chars ' and "
+parameter : (input string, current index)
+*/
+void isString(char * input, int j){
+  char c = input[j];
+  int quoteCounter = 0;
+  int doubleQuoteCounter = 0;
+  for(int i = j ; i < strlen(input) ; i++){
+    if (input[i] == '\''){
+      quoteCounter++;
+    }
+    if (input[i] == '\"' ){
+      doubleQuoteCounter++;
+    }
+  }
+  if(previous == SINGLEQUOTE){
+    current = SINGLEQUOTE;
+  }
+  if(previous == DOUBLEQUOTE){
+    current = DOUBLEQUOTE;
+  }
+  switch(c){
+    case '\'':
+      if (previous == SINGLEQUOTE){
       sprintf(token, "%s%c", token, c);
-
+      current = SPACE;
+      break;
     }
+    else if (quoteCounter > 1){
+    current = SINGLEQUOTE;
+    break;
+  } else {
+    current = WORD;
+  }
+  case '\"':
+    if (previous == DOUBLEQUOTE){
+      sprintf(token, "%s%c", token, c);
+      current = SPACE;
+      break;
+      }
+        else if (doubleQuoteCounter > 1){
+        current = DOUBLEQUOTE;
+        break;
+        } else {
+          current = WORD;
+        }
 
-  }else {
-      current == SINGLEQUOTE;
-    }
-  if (c == '\"){
-      if (previous == DOUBLEQUOTE){
-        current = SPACE;
-        sprintf(token, "%s%c", token, c);
-
-      }
-
-    }else{
-        current == DOUBLEQUOTE;
-      }
-      if (previous = SINGLEQUOTE){
-        current == SINGLEQUOTE;
-      }
-      if (previous = DOUBLEQUOTE){
-        current == DOUBLE;
-      }
   }
 
 }
+
 /*
 	compares a prefix string with the input string beginning at the current index
 	returns integer > 0 if string begins with the prefix
@@ -617,17 +661,21 @@ parameter : (current char from input string)
 */
 void identifyOperator(char * input, int j) {
   char c = input[j];
+  //skips switch statement if previous were DOUBLEQUOTE, SINGLEQUOTE, COMMENT
+  if (previous != DOUBLEQUOTE && previous != SINGLEQUOTE && previous!=COMMENTEND
+      && previous!=SINGLELINECOMMENT && previous !=BLOCKCOMMENT && previous!=ENDSTAR){
   switch (c) {
     // only needs to check one chracter
   case '.' :
     if ((previousWasDecimal() || previousWasOctal()) && is_digit(input, j + 1)) {
-      previous = FLOAT;
-      current = FLOAT;
+      previous = FLOATING;
+      current = FLOATING;
+      break;
     } else {
       current = STRUCT_MEM;
 	  print_token();
     }
-	break;
+    	break;
   case '(':
     current = LEFTPARENTHESIS;
     print_token();
@@ -656,22 +704,6 @@ void identifyOperator(char * input, int j) {
     current = XOR;
     print_token();
     break;
-  case '*':
-   if (previous == DIVISION){
-      current = BLOCKCOMMENT;
-      previous = BLOCKCOMMENT;
-      break;
-    }
-    current = MULTIPLICATION;
-    break;
-  case '/':
-    if (previous == DIVISION){
-    	  current = SINGLELINECOMMENT;
-    		previous = SINGLELINECOMMENT;
-    		break;
-    	}
-    current = DIVISION;
-    break;
   case '!':
     current = NEGATE;
     print_token();
@@ -690,6 +722,22 @@ void identifyOperator(char * input, int j) {
     break;
 
     // need to check the previous type to confirm the type of token
+    case '*':
+  if (previous == DIVISION){
+      current = BLOCKCOMMENT;
+      previous = BLOCKCOMMENT;
+      break;
+    }
+    current = MULTIPLICATION;
+    break;
+  case '/':
+    if (previous == DIVISION){
+    	  current = SINGLELINECOMMENT;
+    		previous = SINGLELINECOMMENT;
+    		break;
+    	}
+    current = DIVISION;
+    break;
   case '+':
     if (previous == ADDITION) {
       current = INCREMENT;
@@ -809,9 +857,10 @@ void identifyOperator(char * input, int j) {
       }
       current = AND;
       break;
-    default;
+    default:
       break;
   }
+}
 }
 
 /*
@@ -876,22 +925,26 @@ void identifyKeyword(char c) {
 int main(int argc, char * argv[]) {
 
   	if (argc < 2){
-  	printf("Please enter string to tokenize.");
+  	printf("no argument, program closed\n");
   	return 0;
   	}
   	// copies argv[1] into variable input
   	int length = strlen(argv[1]);
-  	printf("%d",length);
   	char* input = malloc(length+1 * sizeof(char));
   	strcpy(input,argv[1]);
   	tokenize(input);
-  	}
+    free(token);
+    free(input);
+    return 0;
 
-  //used for arguments from text file
-  /*
+  }
+
+// code for text file input
+/*
   FILE * fptr = fopen(argv[1], "r");
   run_tests(fptr);
   fclose(fptr);
+  free(token);
   return 0;
 
 }
@@ -909,10 +962,12 @@ int run_tests(FILE * f) {
     }
     input[n] = '\0';
     if (n > 0) {
-      printf("............................\n");
-      printf("%s\n", input);
-      printf("............................\n");
+     printf("\nTEST CASE --------------------------------------------\n");
+    printf("%s\n", input);
+    printf("\n");
+      printf("EXPECTED --------------------------------------------\n");
       tokenize(input);
+
     }
   }
 }
